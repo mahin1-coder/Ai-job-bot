@@ -1,0 +1,75 @@
+services:
+  # Backend API
+  - type: web
+    name: ai-job-bot-api
+    env: python
+    region: oregon
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-job-bot-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: ai-job-bot-redis
+          type: redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend.vercel.app
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_API_KEY
+        sync: false
+    healthCheckPath: /health
+
+  # Celery Worker
+  - type: worker
+    name: ai-job-bot-worker
+    env: python
+    region: oregon
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-job-bot-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: ai-job-bot-redis
+          type: redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+
+databases:
+  - name: ai-job-bot-db
+    databaseName: jobbot_db
+    user: jobbot
+    region: oregon
+    plan: starter
+
+services:
+  - type: redis
+    name: ai-job-bot-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru

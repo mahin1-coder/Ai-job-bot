@@ -20,7 +20,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.config import settings
-from app.routers import ai, applications, jobs, resume, auth
+from app.routers import ai, applications, jobs, resume, auth, demo
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
 structlog.configure(
@@ -77,6 +77,7 @@ app.add_middleware(
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(demo.router, prefix="/api/v1/demo", tags=["Demo"])
 app.include_router(resume.router, prefix="/api/v1/resumes", tags=["Resumes"])
 app.include_router(jobs.router, prefix="/api/v1/jobs", tags=["Jobs"])
 app.include_router(applications.router, prefix="/api/v1/applications", tags=["Applications"])

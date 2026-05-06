@@ -1,274 +1,220 @@
-# AI Job Bot — Production-Ready Resume & Job Application Automation
+# 🤖 AI Job Bot
 
-## System Architecture
+**Stop wasting hours customizing resumes and cover letters.**
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     REACT DASHBOARD (Port 3000)                 │
-│  ┌──────────────┐ ┌───────────────┐ ┌───────────────────────┐   │
-│  │ Resume Upload│ │   Job Board   │ │  Application Tracker  │   │
-│  │  + Viewer    │ │ Search + Match│ │  + AI Generator       │   │
-│  └──────────────┘ └───────────────┘ └───────────────────────┘   │
-└────────────────────────────┬────────────────────────────────────┘
-                             │ REST API + SSE (streaming)
-┌────────────────────────────▼────────────────────────────────────┐
-│                  FASTAPI BACKEND (Port 8000)                     │
-│                                                                  │
-│  Routers: /resumes  /jobs  /applications  /ai                    │
-│                                                                  │
-│  ┌──────────────┐ ┌──────────────┐ ┌────────────────────────┐   │
-│  │ ResumeParser │ │  JobScraper  │ │      JobMatcher        │   │
-│  │ pdfplumber   │ │ Adzuna API   │ │  OpenAI Embeddings     │   │
-│  │ PyMuPDF      │ │ RemoteOK API │ │  Cosine Similarity     │   │
-│  │ GPT-4o parse │ │              │ │  GPT-4o Explanations   │   │
-│  └──────────────┘ └──────────────┘ └────────────────────────┘   │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    AIGeneratorService                    │   │
-│  │  Tailored Resume (GPT-4o) │ Cover Letter (GPT-4o)        │   │
-│  │  Non-streaming POST       │ SSE Streaming GET            │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└──────────┬──────────────────────────────────┬───────────────────┘
-           │                                  │
-┌──────────▼───────────┐          ┌───────────▼─────────────┐
-│    PostgreSQL DB      │          │      External APIs       │
-│  resumes / jobs       │          │  - OpenAI GPT-4o         │
-│  applications         │          │  - OpenAI Embeddings     │
-└──────────────────────┘          │  - Adzuna Jobs API       │
-                                  │  - RemoteOK API (free)   │
-┌─────────────────────┐           └─────────────────────────┘
-│      Redis           │
-│  API response cache  │
-│  Celery task queue   │
-└─────────────────────┘
-```
+AI Job Bot automatically tailors your resume and writes cover letters for every job you apply to—using GPT-4 and semantic job matching.
 
-## Folder Structure
+---
 
-```
-ai-job-bot/
-├── backend/
-│   ├── app/
-│   │   ├── main.py               # FastAPI app + lifespan
-│   │   ├── config.py             # Pydantic settings (env vars)
-│   │   ├── database.py           # Async SQLAlchemy engine + session
-│   │   ├── models/
-│   │   │   ├── resume.py         # Resume ORM model
-│   │   │   ├── job.py            # Job ORM model
-│   │   │   └── application.py    # Application ORM model
-│   │   ├── schemas/
-│   │   │   ├── resume.py         # Pydantic request/response schemas
-│   │   │   ├── job.py
-│   │   │   └── application.py
-│   │   ├── services/
-│   │   │   ├── resume_parser.py  # PDF/DOCX → structured JSON via GPT-4o
-│   │   │   ├── job_scraper.py    # Adzuna + RemoteOK API clients
-│   │   │   ├── job_matcher.py    # Embedding similarity + GPT-4o match reasons
-│   │   │   ├── ai_generator.py   # Tailored resume + cover letter generation
-│   │   │   └── application_tracker.py  # Application CRUD
-│   │   ├── routers/
-│   │   │   ├── resume.py         # Upload, list, get, delete
-│   │   │   ├── jobs.py           # Search, match, list
-│   │   │   ├── applications.py   # CRUD + status updates
-│   │   │   └── ai.py             # Generate + SSE streaming
-│   │   └── utils/
-│   │       ├── file_utils.py     # Upload validation + safe file saving
-│   │       └── text_utils.py     # Text cleaning helpers
-│   ├── requirements.txt
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx               # Router + nav
-│   │   ├── components/
-│   │   │   ├── ResumeUpload.jsx  # Drag-drop upload + parsed data view
-│   │   │   ├── JobBoard.jsx      # Search + AI match results
-│   │   │   ├── ApplicationTracker.jsx  # Kanban-style status tracker
-│   │   │   └── AIGenerator.jsx   # Streaming resume + cover letter
-│   │   └── services/api.js       # Axios API client
-│   ├── package.json
-│   ├── vite.config.js
-│   └── Dockerfile
-├── docker-compose.yml            # Full stack: API + Worker + DB + Redis + Frontend
-└── .env.example                  # All required environment variables
-```
+## ✨ What It Does
 
-## Quick Start (Local Development)
+1. **Upload your resume** (PDF or Word)
+2. **Search for jobs** from 100,000+ listings (Adzuna, RemoteOK)
+3. **AI matches** your resume to the best-fit jobs
+4. **Auto-generates** tailored resumes and cover letters for each application
+5. **Track everything** in one dashboard
+
+---
+
+## 🎯 Features
+
+- ✅ **Resume Parser** - Extracts your experience, skills, education using GPT-4
+- ✅ **Smart Job Search** - Scrapes Adzuna, RemoteOK, and other job boards
+- ✅ **AI Matching** - Semantic search finds jobs that actually fit your background
+- ✅ **Tailored Resumes** - Rewrites your bullets to match job keywords (no hallucinations)
+- ✅ **Cover Letters** - Generates personalized 3-paragraph letters in seconds
+- ✅ **Application Tracker** - Kanban board to manage all your applications
+
+---
+
+## 🚀 Quick Start (5 minutes)
 
 ### Prerequisites
-- Docker & Docker Compose
-- OpenAI API key
-- (Optional) Free Adzuna API key from https://developer.adzuna.com
 
-### 1. Clone and configure
+- Docker installed ([Get Docker](https://docs.docker.com/get-docker/))
+- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
+
+### 1. Clone the repo
 
 ```bash
-git clone <your-repo>
-cd ai-job-bot
-cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+git clone https://github.com/mahin1-coder/Ai-job-bot.git
+cd Ai-job-bot
 ```
 
-### 2. Run with Docker Compose
+### 2. Set up environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your OpenAI API key:
+
+```bash
+OPENAI_API_KEY=sk-your-key-here
+```
+
+### 3. Run with Docker
 
 ```bash
 docker-compose up --build
 ```
 
-Services will start at:
+### 4. Open the app
+
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
-### 3. Run backend locally (without Docker)
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-playwright install chromium
-
-# Start PostgreSQL and Redis locally, then:
-uvicorn app.main:app --reload --port 8000
-```
-
-### 4. Run frontend locally
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
+That's it! 🎉
 
 ---
 
-## Implementation Plan (Step by Step)
+## 📸 Screenshots
 
-### Phase 1 — Core Upload + Parse ✅
-1. User uploads resume (PDF/DOCX/TXT) via drag-drop
-2. Backend validates file (extension + magic bytes)
-3. `ResumeParserService` extracts raw text (pdfplumber → PyMuPDF fallback)
-4. GPT-4o structures text into typed JSON (name, skills, experience, education)
-5. Saved to PostgreSQL, returned to frontend
+### Resume Upload & Parsing
+Upload your resume and let AI extract your skills, experience, and education automatically.
 
-### Phase 2 — Job Discovery ✅
-1. User enters query + location in Job Board
-2. `JobScraperService` calls Adzuna API + RemoteOK concurrently
-3. Results deduplicated and saved to DB
-4. Display with apply links
+### Job Search & Matching
+Search thousands of jobs and get AI-powered match scores showing which jobs fit your background.
 
-### Phase 3 — AI Matching ✅
-1. User clicks "AI Match" with a resume selected
-2. Backend generates OpenAI embeddings for resume text and all job descriptions
-3. Cosine similarity computed for each job → match_score (0–1)
-4. Top 5 results enriched with GPT-4o explanation (reasons + missing skills)
-5. Results displayed with colour-coded match badges
+### Tailored Resume Generation
+Generate customized resumes that mirror job description keywords—no hallucinations.
 
-### Phase 4 — AI Generation ✅
-1. User clicks "Generate & Apply" on any job
-2. Application record created in DB
-3. On AI Generator page: click "Generate Both" or "⚡ Stream"
-4. GPT-4o rewrites resume bullets to mirror job description language
-5. GPT-4o writes 3-paragraph targeted cover letter
-6. Both saved to application record
-7. User copies and applies
-
-### Phase 5 — Application Tracking ✅
-1. Application Tracker shows all applications
-2. Status dropdown: pending → applied → interviewing → offer / rejected
-3. Stats dashboard: total, applied, interviewing, offers
+### Application Tracker
+Track all your applications in one place with status updates and AI-generated documents.
 
 ---
 
-## API Reference
+## 🎬 Demo Mode
 
-### Authentication (NEW ✨)
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/auth/register` | Create new user account | No |
-| POST | `/api/v1/auth/login` | Login and get JWT tokens | No |
-| POST | `/api/v1/auth/refresh` | Refresh access token | No |
-| GET | `/api/v1/auth/me` | Get current user profile | Yes |
+Want to try without signing up? We've got sample data ready:
 
-### Resumes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/resumes/upload` | Upload + AI-parse resume |
-| GET | `/api/v1/resumes/` | List all resumes |
+1. Visit http://localhost:3000
+2. Click **"Try Demo"** on the landing page
+3. Explore with a sample resume and pre-loaded jobs
 
-### Jobs & Matching
-| GET | `/api/v1/jobs/search?query=...` | Search jobs from APIs |
-| POST | `/api/v1/jobs/match/{resume_id}` | AI-rank jobs for resume |
-| POST | `/api/v1/applications/` | Create application |
-| GET | `/api/v1/applications/` | List all applications |
-| GET | `/api/v1/applications/stats` | Dashboard stats |
-| PATCH | `/api/v1/applications/{id}/status` | Update status |
-| POST | `/api/v1/ai/generate` | Generate resume + cover letter |
-| GET | `/api/v1/ai/stream/resume/{id}` | SSE stream: tailored resume |
-| GET | `/api/v1/ai/stream/cover-letter/{id}` | SSE stream: cover letter |
-
-Full interactive docs: http://localhost:8000/docs
+No OpenAI key needed for demo mode!
 
 ---
 
-## Technology Choices
+## 🛠️ Tech Stack
 
-| Component | Technology | Why |
-|-----------|-----------|-----|
-| Backend | FastAPI + async | High performance, auto-generated docs, async I/O |
-| Database | PostgreSQL + asyncpg | ACID, JSON columns, future pgvector support |
-| ORM | SQLAlchemy 2 async | Type-safe, production-tested |
-| AI | GPT-4o | Best-in-class instruction following, JSON mode |
-| Embeddings | text-embedding-3-small | Fast, cheap, 1536 dimensions |
-| PDF Parsing | pdfplumber + PyMuPDF | Handles 99% of real-world PDFs |
-| Job APIs | Adzuna + RemoteOK | No ToS violations, free tier available |
-| Frontend | React + Vite + Tailwind | Fast dev cycle, minimal bundle |
-| Streaming | SSE (Server-Sent Events) | Simple, no WebSocket overhead |
-| Queue | Celery + Redis | Background scraping/AI jobs at scale |
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React, Vite, Tailwind CSS |
+| **Backend** | FastAPI (Python), async/await |
+| **Database** | PostgreSQL (async SQLAlchemy) |
+| **AI** | OpenAI GPT-4, text-embedding-3-small |
+| **Jobs APIs** | Adzuna, RemoteOK |
+| **Background Jobs** | Celery + Redis |
+| **Deployment** | Docker, Vercel (frontend), Render (backend) |
 
 ---
 
-## Production Features ✅
+## 💰 Pricing
 
-### Security & Authentication
-- ✅ **JWT authentication** with access + refresh tokens
-- ✅ **Password hashing** (bcrypt via passlib)
-- ✅ **Rate limiting** (200 req/min global, 10 uploads/min per IP)
-- ✅ **CORS protection** with configurable origins
-- ✅ **Input validation** (file magic bytes, size limits)
-- ✅ **Protected routes** via dependency injection
+### Free Tier
+- **5 jobs per day**
+- AI resume tailoring
+- Cover letter generation
+- Application tracking
 
-### Database & Migrations
-- ✅ **Alembic migrations** (no more `create_all()`)
-- ✅ **Async SQLAlchemy** with connection pooling
-- ✅ **Database indexes** on frequently queried fields
-- ✅ **Foreign key constraints** with CASCADE deletes
+### Pro - $9/month
+- **Unlimited jobs**
+- Priority job scraping
+- Email alerts for new matches
+- Resume templates library
+- Export to Word/PDF
 
-### Background Jobs & Scalability
-- ✅ **Celery workers** for async job scraping
-- ✅ **Celery Beat** for scheduled cleanup tasks
-- ✅ **Redis queue** for task distribution
-- ✅ **Horizontal scaling** ready (stateless API)
+**Coming soon!** Sign up for early access.
 
-### Testing & CI/CD
-- ✅ **pytest test suite** with async support
-- ✅ **GitHub Actions pipeline** (lint, test, build, deploy)
-- ✅ **Code coverage** reporting (Codecov)
-- ✅ **Security scanning** (Trivy)
-- ✅ **Docker multi-stage builds** for production
+---
 
-### Deployment & Infrastructure
-- ✅ **nginx reverse proxy** with SSL termination
-- ✅ **Docker Compose production config**
-- ✅ **Health check endpoints**
-- ✅ **Structured logging** (JSON via structlog)
-- ✅ **Error tracking** (Sentry integration ready)
-- ✅ **Environment-based config** (dev/staging/prod)
+## 🚢 Deployment
 
-### Observability
-- ✅ **Health checks** for all services
-- ✅ **Request/response logging**
-- ✅ **Celery task monitoring**
-- ✅ **Database query logging** (in debug mode)
+### Deploy Frontend to Vercel (1 click)
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.
+1. Fork this repo
+2. Visit [Vercel](https://vercel.com/new)
+3. Import your forked repo
+4. Set root directory to `frontend`
+5. Add environment variable: `VITE_API_BASE_URL` = your backend URL
+6. Deploy!
+
+### Deploy Backend to Render
+
+1. Create new Web Service on [Render](https://render.com)
+2. Connect your GitHub repo
+3. Set:
+   - **Root Directory**: `backend`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. Add environment variables from `.env.example`
+5. Add PostgreSQL database (Render provides this)
+6. Deploy!
+
+### Deploy Backend to Railway
+
+1. Visit [Railway](https://railway.app)
+2. Click "New Project" → "Deploy from GitHub"
+3. Select your repo
+4. Railway auto-detects Python
+5. Add PostgreSQL and Redis from the Railway dashboard
+6. Set environment variables
+7. Deploy!
+
+---
+
+## 📚 Documentation
+
+- **API Reference**: Visit `/docs` endpoint after running
+- **Production Deployment**: See [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Technical Details**: See [README_OLD.md](README_OLD.md) for architecture
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how:
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+MIT License - feel free to use this for your own job search!
+
+---
+
+## 🙋 FAQ
+
+**Q: Do I need coding experience?**  
+A: Nope! Just Docker and an OpenAI API key.
+
+**Q: How much does OpenAI cost?**  
+A: ~$0.02 per resume + cover letter pair. Super cheap.
+
+**Q: Can I use my own resume template?**  
+A: Yes! We preserve your formatting and just rewrite the content.
+
+**Q: What job boards does it search?**  
+A: Adzuna (aggregates 100k+ jobs), RemoteOK, and we're adding LinkedIn scraping soon.
+
+**Q: Is my data private?**  
+A: Yes. Everything runs on your infrastructure. We don't store your data.
+
+---
+
+## ⭐ Star Us!
+
+If this saved you time, give us a star on GitHub! It helps others discover the project.
+
+---
+
+**Built with ❤️ by developers who are tired of copy-pasting resumes.**
+
+[GitHub](https://github.com/mahin1-coder/Ai-job-bot) • [Issues](https://github.com/mahin1-coder/Ai-job-bot/issues) • [Discussions](https://github.com/mahin1-coder/Ai-job-bot/discussions)

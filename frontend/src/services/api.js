@@ -53,4 +53,11 @@ export const aiApi = {
     `${api.defaults.baseURL}/api/v1/ai/stream/cover-letter/${applicationId}?tone=${tone}`,
 };
 
+// ── Demo ──────────────────────────────────────────────────────────────────────
+export const demoApi = {
+  getResume: () => api.get("/api/v1/demo/resume"),
+  getJobs: () => api.get("/api/v1/demo/jobs"),
+  getApplications: () => api.get("/api/v1/demo/applications"),
+};
+
 export default api;
