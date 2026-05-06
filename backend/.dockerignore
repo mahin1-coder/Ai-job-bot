@@ -1,0 +1,41 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist
+build
+.venv
+venv
+.pytest_cache
+.coverage
+htmlcov
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Development
+.git
+.gitignore
+README.md
+DEPLOYMENT.md
+.github
+scripts
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Tests
+tests/
+pytest.ini
+
+# Documentation
+*.md
+docs/

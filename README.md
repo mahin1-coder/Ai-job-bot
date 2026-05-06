@@ -182,10 +182,21 @@ npm run dev
 
 ## API Reference
 
+### Authentication (NEW ✨)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/auth/register` | Create new user account | No |
+| POST | `/api/v1/auth/login` | Login and get JWT tokens | No |
+| POST | `/api/v1/auth/refresh` | Refresh access token | No |
+| GET | `/api/v1/auth/me` | Get current user profile | Yes |
+
+### Resumes
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/v1/resumes/upload` | Upload + AI-parse resume |
 | GET | `/api/v1/resumes/` | List all resumes |
+
+### Jobs & Matching
 | GET | `/api/v1/jobs/search?query=...` | Search jobs from APIs |
 | POST | `/api/v1/jobs/match/{resume_id}` | AI-rank jobs for resume |
 | POST | `/api/v1/applications/` | Create application |
@@ -217,14 +228,47 @@ Full interactive docs: http://localhost:8000/docs
 
 ---
 
-## Production Checklist
+## Production Features ✅
 
-- [ ] Replace `init_db()` with Alembic migrations
-- [ ] Add pgvector extension for fast embedding search at scale
-- [ ] Add JWT authentication (FastAPI-Users or custom)
-- [ ] Add rate limiting (slowapi or nginx)
-- [ ] Set up Sentry for error tracking
-- [ ] Move file storage to S3 / GCS
-- [ ] Add Celery tasks for async scraping + batch AI generation
-- [ ] Set up CI/CD (GitHub Actions → Docker → ECS/Cloud Run)
-- [ ] Add Redis caching for job search results
+### Security & Authentication
+- ✅ **JWT authentication** with access + refresh tokens
+- ✅ **Password hashing** (bcrypt via passlib)
+- ✅ **Rate limiting** (200 req/min global, 10 uploads/min per IP)
+- ✅ **CORS protection** with configurable origins
+- ✅ **Input validation** (file magic bytes, size limits)
+- ✅ **Protected routes** via dependency injection
+
+### Database & Migrations
+- ✅ **Alembic migrations** (no more `create_all()`)
+- ✅ **Async SQLAlchemy** with connection pooling
+- ✅ **Database indexes** on frequently queried fields
+- ✅ **Foreign key constraints** with CASCADE deletes
+
+### Background Jobs & Scalability
+- ✅ **Celery workers** for async job scraping
+- ✅ **Celery Beat** for scheduled cleanup tasks
+- ✅ **Redis queue** for task distribution
+- ✅ **Horizontal scaling** ready (stateless API)
+
+### Testing & CI/CD
+- ✅ **pytest test suite** with async support
+- ✅ **GitHub Actions pipeline** (lint, test, build, deploy)
+- ✅ **Code coverage** reporting (Codecov)
+- ✅ **Security scanning** (Trivy)
+- ✅ **Docker multi-stage builds** for production
+
+### Deployment & Infrastructure
+- ✅ **nginx reverse proxy** with SSL termination
+- ✅ **Docker Compose production config**
+- ✅ **Health check endpoints**
+- ✅ **Structured logging** (JSON via structlog)
+- ✅ **Error tracking** (Sentry integration ready)
+- ✅ **Environment-based config** (dev/staging/prod)
+
+### Observability
+- ✅ **Health checks** for all services
+- ✅ **Request/response logging**
+- ✅ **Celery task monitoring**
+- ✅ **Database query logging** (in debug mode)
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.

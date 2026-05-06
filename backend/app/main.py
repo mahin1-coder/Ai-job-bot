@@ -15,10 +15,12 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.config import settings
-from app.database import init_db
-from app.routers import ai, applications, jobs, resume
+from app.routers import ai, applications, jobs, resume, auth
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
 structlog.configure(
@@ -34,15 +36,17 @@ structlog.configure(
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 logger = structlog.get_logger(__name__)
 
+# ── Rate Limiter ─────────────────────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
 
 # ── Lifespan (replaces deprecated @app.on_event) ─────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Starting AI Job Bot", version=settings.APP_VERSION)
+    logger.info("Starting AI Job Bot", version=settings.APP_VERSION, env=settings.ENVIRONMENT)
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
-    await init_db()
-    logger.info("Startup complete.")
+    logger.info("Startup complete. Use 'alembic upgrade head' to run migrations.")
     yield
     # Shutdown
     logger.info("Shutting down AI Job Bot.")
@@ -58,6 +62,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── Rate Limiting ─────────────────────────────────────────────────────────────
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
@@ -68,6 +76,7 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(resume.router, prefix="/api/v1/resumes", tags=["Resumes"])
 app.include_router(jobs.router, prefix="/api/v1/jobs", tags=["Jobs"])
 app.include_router(applications.router, prefix="/api/v1/applications", tags=["Applications"])

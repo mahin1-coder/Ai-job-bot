@@ -11,7 +11,14 @@ class Settings(BaseSettings):
     APP_NAME: str = "AI Job Bot"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
+    ENVIRONMENT: str = "development"  # development | staging | production
     SECRET_KEY: str = "change-me-in-production"
+    
+    # ── JWT Auth ─────────────────────────────────────────────────
+    JWT_SECRET_KEY: str = "change-me-in-production-jwt-secret"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ── Database ─────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql+asyncpg://jobbot:jobbot_password@localhost:5432/jobbot_db"

@@ -1,5 +1,6 @@
 from app.models.resume import Resume
 from app.models.job import Job
 from app.models.application import Application
+from app.models.user import User
 
-__all__ = ["Resume", "Job", "Application"]
+__all__ = ["Resume", "Job", "Application", "User"]
